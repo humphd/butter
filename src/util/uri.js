@@ -68,6 +68,38 @@ define( [], function(){
     return s;
   }
 
+  // Make sure we have a URI object vs. a URI string,
+  // and convert if not.
+  function ensureUriObject( uriObject ){
+    if( typeof uriObject === "string" ){
+      uriObject = URI.parse( uriObject );
+    }
+    return uriObject;
+  }
+
+  // Refresh uriObject.query based on current uriObject.queryKey values
+  function updateQuery( uriObject ){
+    var key,
+        value,
+        queryKey = uriObject.queryKey,
+        queryString = "",
+        queryKeyCount = 0;
+
+    // Update query string to reflect change
+    for( key in queryKey ){
+      if( queryKey.hasOwnProperty( key ) ){
+        value = queryKey[ key ];
+        queryString += queryKeyCount > 0 ? "&" : "";
+        queryString += key;
+        // Allow value=0
+        queryString += ( !!value || value === 0 ) ? "=" + value : "";
+        queryKeyCount++;
+      }
+    }
+
+    uriObject.query = queryString;
+  }
+
   var URI = {
 
     // Allow overriding the initial seed (mostly for testing).
@@ -90,35 +122,20 @@ define( [], function(){
     // Make a URI object (or URI string, turned into a URI object) unique.
     // This will turn http://foo.com into http://foo.com?<UID_KEY_NAME>=<seed number++>.
     makeUnique: function( uriObject ){
-      var key,
-          value,
-          queryKey,
-          queryString = "",
-          queryKeyCount = 0;
+      uriObject = ensureUriObject( uriObject );
+      uriObject.queryKey[ UID_KEY_NAME ] = seed++;
+      updateQuery( uriObject );
+      return uriObject;
+    },
 
-      if( typeof uriObject === "string" ){
-        uriObject = this.parse( uriObject );
-      }
-
-      queryKey = uriObject.queryKey;
-
-      queryKey[ UID_KEY_NAME ] = seed++;
-
-      // Update query string to reflect change
-      for( key in queryKey ){
-        if( queryKey.hasOwnProperty( key ) ){
-          value = queryKey[ key ];
-          queryString += queryKeyCount > 0 ? "&" : "";
-          queryString += key;
-          // Allow value=0
-          queryString += ( !!value || value === 0 ) ? "=" + value : "";
-          queryKeyCount++;
-        }
-      }
-      uriObject.query = queryString;
-
+    // Remove a previously added butter uid (i.e., added by makeUnique).
+    removeUnique: function( uriObject ){
+      uriObject = ensureUriObject( uriObject );
+      delete uriObject.queryKey[ UID_KEY_NAME ];
+      updateQuery( uriObject );
       return uriObject;
     }
+
   };
 
   return URI;

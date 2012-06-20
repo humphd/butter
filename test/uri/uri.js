@@ -203,6 +203,17 @@
       equal( URI.makeUnique( uriB ).toString(), uriC , "Calling URI.makeUnique twice works." );
     });
 
+    test( "URI.removeUnique()", function(){
+      URI.seed = 0;
+
+      var uriA = "host.com:81/direc.tory/file.ext?query=1&test=2#anchor",
+          uriB = "host.com:81/direc.tory/file.ext?query=1&test=2&butteruid=0#anchor",
+          unique = URI.makeUnique( uriA );
+
+      equal( unique, uriB, "makeUnqiue adds butteruid" );
+      equal( URI.removeUnique( unique ).toString(), uriA, "removeUnique scrubs URL of makeUnqiue uid" );
+    });
+
   });
 
 }());
