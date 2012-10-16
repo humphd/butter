@@ -2,10 +2,6 @@
 
 EditorHelper.addPlugin( "image", function( trackEvent ) {
 
-  // Sizes of our max embed size
-  var MAX_IMAGE_WIDTH = 1280,
-      MAX_IMAGE_HEIGHT = 740;
-
   var _popcornOptions = trackEvent.popcornTrackEvent,
       _container = _popcornOptions._container,
       _media = document.getElementById( trackEvent.track._media.target ),

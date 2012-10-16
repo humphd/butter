@@ -236,9 +236,7 @@
         var file,
             imgSrc,
             imgURI,
-            image,
-            canvas = document.createElement( "canvas" ),
-            context;
+            image;
 
         if ( !e.dataTransfer || !e.dataTransfer.files[ 0 ] ) {
           return;
