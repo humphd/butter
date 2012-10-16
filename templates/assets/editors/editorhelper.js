@@ -1,5 +1,7 @@
 (function( global, $ ) {
-  var plugins = {};
+  var plugins = {},
+      MAX_IMAGE_WIDTH = 1280,
+      MAX_IMAGE_HEIGHT = 740;
 
   var EditorHelper = function() {
     throw "Do not use EditorHelper in this mannger. Use EditorHelper.init instead.";
@@ -203,6 +205,94 @@
           contentContainer.setAttribute( "contenteditable", "true" );
         }
       }
+    };
+
+    /**
+     * Member: droppable
+     *
+     * Makes a container's content editable using contenteditable
+     *
+     * @param {TrackEvent} trackEvent: The trackEvent to update when content changes
+     * @param {DOMElement} dropContainer: The container that listens for the drop events
+     */
+
+    global.EditorHelper.droppable = function( trackEvent, dropContainer ) {
+      dropContainer.addEventListener( "dragover", function( e ) {
+        e.preventDefault();
+        dropContainer.classList.add( "butter-dragover" );
+      }, false );
+
+      dropContainer.addEventListener( "dragleave", function( e ) {
+        e.preventDefault();
+        dropContainer.classList.remove( "butter-dragover" );
+      }, false );
+
+      dropContainer.addEventListener( "drop", function( e ) {
+        dropContainer.classList.add( "butter-dropped" );
+        e.preventDefault();
+
+        e.preventDefault();
+
+        var file,
+            imgSrc,
+            imgURI,
+            image,
+            canvas = document.createElement( "canvas" ),
+            context;
+
+        if ( !e.dataTransfer || !e.dataTransfer.files[ 0 ] ) {
+          return;
+        }
+
+        file = e.dataTransfer.files[ 0 ];
+
+        if ( window.URL ) {
+          imgSrc = window.URL.createObjectURL( file );
+        } else if ( window.webkitURL ) {
+          imgSrc = window.webkitURL.createObjectURL( file );
+        } else {
+          butter.dispatch( "droppable-unsupported" );
+        }
+
+        image = document.createElement( "img" );
+        image.onload = function() {
+          var canvas = document.createElement( "canvas" ),
+              width = this.width,
+              height = this.height,
+              aspectRatio = width / height,
+              scaledWidth, scaledHeight, context;
+
+          // Fit image nicely into our largest embed size, using
+          // the longest side and aspect ratio.
+          if ( width > height ) {
+            scaledWidth = MAX_IMAGE_WIDTH;
+            scaledHeight = Math.round( scaledWidth * aspectRatio );
+          } else {
+            scaledHeight = MAX_IMAGE_HEIGHT;
+            scaledWidth = Math.round( scaledHeight * aspectRatio );
+          }
+
+          canvas.width = scaledWidth;
+          canvas.height = scaledHeight;
+          context = canvas.getContext( "2d" );
+          context.drawImage( this, 0, 0, scaledWidth, scaledHeight );
+
+          imgURI = canvas.toDataURL();
+          trackEvent.update( { src: imgURI } );
+        };
+        image.src = imgSrc;
+
+        // Force image to download, esp. Opera. We can't use
+        // "display: none", since that makes it invisible, and
+        // thus not load.  Opera also requires the image be
+        // in the DOM before it will load.
+        div = document.createElement( "div" );
+        div.setAttribute( "data-butter-exclude", "true" );
+        div.className = "butter-image-preload";
+        div.appendChild( image );
+        document.body.appendChild( div );
+
+      }, false );
     };
 
     function _updateFunction( e ) {
