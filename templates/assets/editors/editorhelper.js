@@ -228,15 +228,11 @@
       }, false );
 
       dropContainer.addEventListener( "drop", function( e ) {
+        var file, imgSrc, imgURI, image, div;
+
+        e.preventDefault();
+
         dropContainer.classList.add( "butter-dropped" );
-        e.preventDefault();
-
-        e.preventDefault();
-
-        var file,
-            imgSrc,
-            imgURI,
-            image;
 
         if ( !e.dataTransfer || !e.dataTransfer.files[ 0 ] ) {
           return;
@@ -254,20 +250,38 @@
 
         image = document.createElement( "img" );
         image.onload = function() {
-          var canvas = document.createElement( "canvas" ),
-              width = this.width,
+          var width = this.width,
               height = this.height,
-              aspectRatio = width / height,
-              scaledWidth, scaledHeight, context;
+              wRatio, hRatio, resizeRatio,
+              scaledWidth, scaledHeight,
+              canvas = document.createElement( "canvas" ),
+              context;
 
           // Fit image nicely into our largest embed size, using
-          // the longest side and aspect ratio.
-          if ( width > height ) {
-            scaledWidth = MAX_IMAGE_WIDTH;
-            scaledHeight = Math.round( scaledWidth * aspectRatio );
+          // the longest side and aspect ratio. Inspired by:
+          // http://stackoverflow.com/questions/7863653/algorithm-to-resize-image-and-maintain-aspect-ratio-to-fit-iphone
+          if ( width >= height ) {
+            if ( width <= MAX_IMAGE_WIDTH && height <= MAX_IMAGE_HEIGHT ) {
+              scaledWidth = width;
+              scaledHeight = height;
+            } else {
+              wRatio = MAX_IMAGE_WIDTH / width;
+              hRatio = MAX_IMAGE_HEIGHT / height;
+              resizeRatio = Math.min( wRatio, hRatio );
+              scaledHeight = height * resizeRatio;
+              scaledWidth = width * resizeRatio;
+            }
           } else {
-            scaledHeight = MAX_IMAGE_HEIGHT;
-            scaledWidth = Math.round( scaledHeight * aspectRatio );
+            if ( height <= MAX_IMAGE_WIDTH && width <= MAX_IMAGE_HEIGHT ) {
+              scaledWidth = width;
+              scaledHeight = height;
+            } else {
+              wRatio = MAX_IMAGE_HEIGHT / width;
+              hRatio = MAX_IMAGE_WIDTH / height;
+              resizeRatio = Math.min( wRatio, hRatio );
+              scaledHeight = height * resizeRatio;
+              scaledWidth = width * resizeRatio;
+            }
           }
 
           canvas.width = scaledWidth;
@@ -289,7 +303,6 @@
         div.className = "butter-image-preload";
         div.appendChild( image );
         document.body.appendChild( div );
-
       }, false );
     };
 
